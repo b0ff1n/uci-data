@@ -4,7 +4,7 @@
   (:gen-class))
 
 (def RED ">50K.")
-(def BLUE "<=50K")
+(def BLUE "<=50K.")
 
 
 (defn read-dataset [dataset training?]
@@ -27,6 +27,9 @@
         f (get res false)]
     (float (* 100 (/ t (+ t f))))))
 
+(defn errors% [res]
+  (- 100 (succeeds% res)))
+
 
 (defn -main
   "I don't do a whole lot ... yet."
@@ -48,4 +51,4 @@
 (->> (read-dataset "adult" false)
      (rest)
      (prediction-random '())
-     (succeeds%))
+     (errors%))
