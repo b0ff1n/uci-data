@@ -1,10 +1,16 @@
 (ns uci-data.core
-  (:require [clojure.data.csv :as csv]
+  (:require [uci-data.classifiers :as cl]
+            [clojure.data.csv :as csv]
             [clojure.java.io :as io])
   (:gen-class))
 
 (def RED ">50K.")
 (def BLUE "<=50K.")
+
+
+
+
+
 
 
 (defn read-dataset [dataset training?]
@@ -15,40 +21,31 @@
        (csv/read-csv in)))))
 
 
-(defn prediction-random [train test]
-  (reduce (fn [result item]
-            (let [r (= (last item) (rand-nth [RED BLUE]))
-                  c (get result r 0)]
-              (assoc result r (inc c)))) {true 0 false 0} test))
-
-
-(defn succeeds% [res]
-  (let [t (get res true)
-        f (get res false)]
-    (float (* 100 (/ t (+ t f))))))
-
-(defn errors% [res]
-  (- 100 (succeeds% res)))
-
-
-(defn -main
-  "I don't do a whole lot ... yet."
-  [& args]
-  (println "Hello, World!"))
+(defn attributes [v]
+  (butlast v))
+(defn result [v]
+  (let [r (last v)]
+    (if (= r RED) :rich :poor)))
 
 
 
-(->> (rest (read-dataset "adult" false))
-     (map last)
-     (distinct))
-
-(let [test (rest (read-dataset "adult" false))]
-  (prediction-random '() test))
-
-
+(defn classifier-tester [classifier train-ds test-ds]
+  (doseq [v train-ds]
+    (cl/train classifier (attributes v) (result v)))
+  (frequencies (pmap #(= (cl/classify classifier (attributes %))
+                        (result %))
+                    test-ds)))
 
 
-(->> (read-dataset "adult" false)
-     (rest)
-     (prediction-random '())
-     (errors%))
+
+(def TRAIN_DATA (rest (read-dataset "adult" true)))
+(def TEST_DATA (rest (read-dataset "adult" false)))
+
+
+;; (let [rcl (cl/random-classifier)]
+;;   (classifier-tester rcl TRAIN_DATA TEST_DATA))
+(succeeds% {true 8231, false 8050})
+
+;; (let [nbcl (cl/naive-bayes-classifier)]
+;;   (classifier-tester nbcl TRAIN_DATA TEST_DATA))
+(succeeds% {true 12435, false 3846})
